@@ -64,40 +64,6 @@ Telegram Send Message
 - **Unidade de temperatura:** Celsius (`metric`)
 - **Idioma da resposta da API:** Português brasileiro (`pt_br`)
 - **Normalização do texto:** O workflow remove acentos, espaços extras e converte a sigla do estado para o código do país `BR`, conforme exigido pela API
-
----
-
-## 🐳 Docker (opcional)
-
-Se quiser rodar o N8N localmente com Docker, crie um arquivo `docker-compose.yml`:
-
-```yaml
-version: '3.8'
-
-services:
-  n8n:
-    image: n8nio/n8n
-    restart: always
-    ports:
-      - "5678:5678"
-    environment:
-      - N8N_BASIC_AUTH_ACTIVE=true
-      - N8N_BASIC_AUTH_USER=admin
-      - N8N_BASIC_AUTH_PASSWORD=senha123
-    volumes:
-      - n8n_data:/home/node/.n8n
-
-volumes:
-  n8n_data:
-```
-
-Depois execute:
-```bash
-docker-compose up -d
-```
-
-Acesse em `http://localhost:5678`
-
 ---
 
 ## ⚠️ Segurança
@@ -105,6 +71,9 @@ Acesse em `http://localhost:5678`
 - **Nunca** compartilhe seu `TELEGRAM_BOT_TOKEN` ou `OPENWEATHER_API_KEY` publicamente
 - Confirme que o arquivo `workflow-chatbot-telegram.json` exportado **não contém** tokens ou chaves antes de enviar
 - As credenciais devem ser configuradas diretamente no N8N, nunca no código
+
+- <img width="1216" height="856" alt="image" src="https://github.com/user-attachments/assets/0e5f4f08-a936-48cb-947c-2b70b4192f85" />
+
 
 ---
 
