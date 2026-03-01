@@ -1,0 +1,318 @@
+{
+  "name": "TempFTRDiego",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        48,
+        0
+      ],
+      "id": "d8657a22-20e7-4ae7-9b4f-01f62c7b2eee",
+      "name": "Telegram Trigger",
+      "webhookId": "5f74f19d-8855-46d2-9fe0-d7707882f87a",
+      "retryOnFail": false,
+      "credentials": {
+        "telegramApi": {
+          "id": "secret",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.openweathermap.org/data/2.5/weather",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $json.queue }}"
+            },
+            {
+              "name": "units",
+              "value": "metric"
+            },
+            {
+              "name": "lang",
+              "value": "pt_br"
+            },
+            {
+              "name": "appid",
+              "value": "secret"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        464,
+        0
+      ],
+      "id": "636c018e-a1c7-4228-8591-f953c0bc70ba",
+      "name": "HTTP Request",
+      "retryOnFail": false,
+      "executeOnce": false,
+      "alwaysOutputData": true,
+      "notesInFlow": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "96c10312-889d-4d7f-8857-18bf9e851488",
+              "leftValue": "={{ $json.cod }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        608,
+        -16
+      ],
+      "id": "c1d3887f-9a54-4543-91e2-64cc55a38b32",
+      "name": "If",
+      "alwaysOutputData": false,
+      "retryOnFail": false,
+      "executeOnce": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const dados = $('HTTP Request').item.json;\nconst cidade = dados.name;\nconst temp = Math.round(dados.main.temp);\nconst message = `🌤️ A temperatura em ${cidade} é de ${temp}°C.`;\nreturn { message };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        848,
+        -160
+      ],
+      "id": "9f0e0fcf-bacb-4213-9eaa-a3f1ff63b737",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1040,
+        -160
+      ],
+      "id": "053f151d-9505-41c7-8e99-fc04af50656c",
+      "name": "Send a text message",
+      "webhookId": "f10182fd-565c-4750-b1d6-dd2a3912d819",
+      "credentials": {
+        "telegramApi": {
+          "id": "PN3K9Wb57cofGgPY",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "Cidade não encontrada. Use o formato Cidade,UF (ex.: Rio de Janeiro,RJ).",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1056,
+        80
+      ],
+      "id": "1aaed7d9-58ec-4bde-abc7-43ca56d74681",
+      "name": "Send a text message1",
+      "webhookId": "f10182fd-565c-4750-b1d6-dd2a3912d819",
+      "credentials": {
+        "telegramApi": {
+          "id": "PN3K9Wb57cofGgPY",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const texto = $input.item.json.message?.text || $input.item.json.text || \"\";\n\nconst queue = texto\n  .trim()\n  .normalize(\"NFD\")\n  .replace(/[\\u0300-\\u036f]/g, \"\")\n  .toLowerCase()\n  .replace(/,[a-z]{2}(\\s|\\n)*$/, \",BR\");\n\nreturn { queue };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        256,
+        0
+      ],
+      "id": "7f4b5c67-55b7-4e86-a1c6-99047befefc9",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return { message: \"❌ Cidade não encontrada. Use o formato Cidade,UF (ex.: São Paulo,SP).\" };;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        848,
+        80
+      ],
+      "id": "21545923-639e-4a4f-a4ba-1efe3cdef017",
+      "name": "Code in JavaScript2",
+      "executeOnce": true
+    }
+  ],
+  "pinData": {
+    "Telegram Trigger": [
+      {
+        "json": {
+          "update_id": 357401959,
+          "message": {
+            "message_id": 63,
+            "from": {
+              "id": 1842592937,
+              "is_bot": false,
+              "first_name": "Diego Affonso",
+              "username": "Chakhead",
+              "language_code": "pt-br"
+            },
+            "chat": {
+              "id": 1842592937,
+              "first_name": "Diego Affonso",
+              "username": "Chakhead",
+              "type": "private"
+            },
+            "date": 1771769548,
+            "text": "rio de jro,RJ"
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "aecac222-6fcf-403d-87e5-7710319efed5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "eaefadac7f7b739f243ee5915f69a1070926500c0dbb671653966570447c8bb2"
+  },
+  "id": "6BcWcvq3rkwWW5VD",
+  "tags": []
+}
